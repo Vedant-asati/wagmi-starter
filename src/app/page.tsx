@@ -3,12 +3,14 @@
 import { BrowserRouter } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
 
-// import { Account } from "./utils/account";
-// import { WalletOptions } from "./utils/wallet-options";
-import { SendTransaction } from "./utils/SendTxn";
+import { SendTransaction } from "./ui/SendTxn";
 
+// Internal
 import Header from "./components/Header/index";
+import { SignIn } from "./ui/SignIn";
+import { SignOut } from "./ui/SignOut";
 
+// MUI
 import ImageList from "@mui/material/ImageList";
 import ImageListItem from "@mui/material/ImageListItem";
 import ImageListItemBar from "@mui/material/ImageListItemBar";
@@ -18,24 +20,15 @@ import InfoIcon from "@mui/icons-material/Info";
 
 function App() {
   const { isConnected } = useAccount();
-
-  // // console.log("disconnect: ", disconnect);
-
-  // function ConnectWallet() {
-  //   const { isConnected } = useAccount();
-  //   if (isConnected) return <Account />;
-  //   return <WalletOptions />;
-  // }
-
   return (
     <div className="App">
       <BrowserRouter>
-        JSR
+        Jai Siyaram!
         <Header />
-        {/* <Home/> */}
-        {/* <ConnectWallet /> */}
         {isConnected && <SendTransaction />}
         {/* <TitlebarImageList /> */}
+        <SignIn /><br />
+        <SignOut />
       </BrowserRouter>
     </div>
   );

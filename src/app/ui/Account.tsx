@@ -19,7 +19,6 @@ export function Account() {
           <div>{ensName ? `${ensName} (${shortAddress})` : shortAddress}</div>
         )}
       </Typography>
-      {/* {address && <button onClick={() => disconnect()}>Disconnect</button>} */}
     </div>
   );
 }

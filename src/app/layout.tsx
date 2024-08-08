@@ -1,19 +1,23 @@
 import "./globals.css";
+
+// External
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { headers } from "next/headers";
 import { type ReactNode } from "react";
 import { cookieToInitialState } from "wagmi";
 
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
+// MUI
+import theme from "@/theme";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import theme from "@/theme";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
+const inter = Inter({ subsets: ["latin"] });
 
-import { getConfig } from "@/wagmi";
+// Internal
+import { config } from "@/wagmi";
 import { Providers } from "./providers";
 
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Task Master",
@@ -21,16 +25,26 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout(props: { children: ReactNode }) {
-  const initialState = cookieToInitialState(
-    getConfig(),
-    headers().get("cookie")
-  );
+  const getInitialState = () => {
+    try {
+      const cookie = headers().get("cookie");
+      if (cookie) {
+        const decodedCookie = decodeURIComponent(cookie);
+        return cookieToInitialState(config, decodedCookie);
+      }
+    } catch (error) {
+      console.error("Failed to parse cookie:", error);
+    }
+    return config; // Fallback to default config if parsing fails
+  };
+
+  const initialState = getInitialState();
+
   return (
     <html lang="en">
       <body className={inter.className}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ThemeProvider theme={theme}>
-            {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
             <CssBaseline />
             <Providers initialState={initialState}>{props.children}</Providers>
           </ThemeProvider>
