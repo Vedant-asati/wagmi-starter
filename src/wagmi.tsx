@@ -1,6 +1,6 @@
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 
-import { cookieStorage, createStorage } from "wagmi";
+import { cookieStorage, createStorage, http } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 
 // Get projectId from https://cloud.walletconnect.com
@@ -25,4 +25,8 @@ export const config = defaultWagmiConfig({
   storage: createStorage({
     storage: cookieStorage,
   }),
+  transports: {
+    [mainnet.id]: http("https://eth-mainnet.g.alchemy.com/v2/4RaQF5Uf-eXwN-BDD3Vua45lPpDOVDQK"),
+    [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/4RaQF5Uf-eXwN-BDD3Vua45lPpDOVDQK"),
+  },
 });

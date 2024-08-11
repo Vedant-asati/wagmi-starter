@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 // import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
 
 // MUI
@@ -10,10 +10,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 
 // Internal
 import { classes } from "./styles.js";
-import logo from "@/assets/Logo.svg";
+import logo from "@/app/assets/Logo.svg";
 
-import AccountMenu from "@/app/utils/AccountMenu";
-
+import AccountMenu from "@/app/ui/AccountMenu";
 
 const Header: React.FC = () => {
   // const account = useSelector((state) => state.allNft.account);
@@ -24,7 +23,7 @@ const Header: React.FC = () => {
       <CssBaseline />
       <AppBar sx={classes.header}>
         <Toolbar>
-          <Link to="/">
+          <Link href="/">
             <img src={logo} alt="Galerie" style={classes.logo} />
           </Link>
           <div style={classes.account}>

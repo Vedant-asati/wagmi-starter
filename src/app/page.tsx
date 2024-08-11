@@ -1,6 +1,7 @@
 "use client";
 
-import { BrowserRouter } from "react-router-dom";
+// import { BrowserRouter, Switch, Route } from "react-router-dom";
+import Link from "next/link";
 import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
 
 import { SendTransaction } from "./ui/SendTxn";
@@ -22,14 +23,16 @@ function App() {
   const { isConnected } = useAccount();
   return (
     <div className="App">
-      <BrowserRouter>
-        Jai Siyaram!
-        <Header />
-        {isConnected && <SendTransaction />}
-        {/* <TitlebarImageList /> */}
-        <SignIn /><br />
-        <SignOut />
-      </BrowserRouter>
+      Jai Siyaram!
+      <Header />
+      {isConnected && <SendTransaction />}
+      {/* <TitlebarImageList /> */}
+      <SignIn />
+      <br />
+      <SignOut />
+      <Link href="/">Home</Link>
+      <Link href="/create-nft">Create NFT</Link>
+      <Link href="/nft/5">NFT item 5</Link>
     </div>
   );
 }
