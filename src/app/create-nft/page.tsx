@@ -7,6 +7,7 @@ import { PinataSDK } from "pinata";
 import {
   type BaseError,
   useAccount,
+  useReadContract,
   useWaitForTransactionReceipt,
   useWatchContractEvent,
   useWriteContract,
@@ -41,6 +42,18 @@ const CreateNFT = () => {
   //   (state) => state.allNft.artTokenContract
   // );
 
+  const [_tokenId, setTokenId] = useState<number>(-1);
+  const [URI, setURI] = useState("");
+  const [isApproved, setIsApproved] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    arbiter: "",
+    auction_window: "",
+    price: "",
+  });
+
   const { address } = useAccount();
   const {
     data: hash,
@@ -54,7 +67,17 @@ const CreateNFT = () => {
       hash,
     });
 
+  // TODO Fix
+  // Read
+  const { data: url, isFetched } = useReadContract({
+    address: address_nft,
+    abi: abi_nft,
+    functionName: "tokenURI",
+    args: [BigInt(_tokenId)],
+  });
+
   // Event Logs
+
   useWatchContractEvent({
     address: address_nft,
     abi: abi_nft,
@@ -94,17 +117,12 @@ const CreateNFT = () => {
     pinataGateway: "turquoise-voluntary-cricket-828.mypinata.cloud",
   });
 
-  const [_tokenId, setTokenId] = useState<number>(-1);
-  const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    tokenId: "",
-    arbiter: "",
-    auction_window: "",
-    price: "",
-  });
+  useEffect(() => {
+    if (url) {
+      const uri = url.split("/").pop();
+      if (uri) setURI(uri);
+    }
+  }, [url]);
 
   // 1 TODO: Fix calling twice
   useEffect(() => {
@@ -122,7 +140,7 @@ const CreateNFT = () => {
     if (isConfirmed && _tokenId !== -1 && isApproved) {
       (async () => {
         // Safely list NFT on Marketplace
-        await listNFT(_tokenId);
+        await listNFT(_tokenId, URI);
         setTokenId(-1);
         setIsApproved(false);
         // await uploadJsonToIPFS();
@@ -148,6 +166,8 @@ const CreateNFT = () => {
 
         const ImgURL = `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`;
         console.log("ImgURL", ImgURL);
+
+        setURI(res.IpfsHash);
 
         return res.IpfsHash;
       } catch (error) {
@@ -187,7 +207,7 @@ const CreateNFT = () => {
     }
   }
 
-  async function listNFT(tokenId: number) {
+  async function listNFT(tokenId: number, URI: string) {
     const { title, description, price, arbiter, auction_window } = formData;
     const auctionWindowInSeconds = dateToSeconds(auction_window);
     console.log("Marketplace: ", address_marketplace);
@@ -197,7 +217,8 @@ const CreateNFT = () => {
       tokenId,
       price,
       arbiter,
-      auctionWindowInSeconds
+      auctionWindowInSeconds,
+      URI
     );
 
     try {
@@ -211,6 +232,7 @@ const CreateNFT = () => {
           parseUnits(price, 18),
           arbiter,
           auctionWindowInSeconds,
+          URI,
         ],
       });
       console.log("Yay! NFT Listed Successfully 🎉🎉");
@@ -298,15 +320,6 @@ const CreateNFT = () => {
               variant="filled"
               required
               value={formData.description}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Token Id"
-              name="tokenId"
-              variant="filled"
-              required
-              value={formData.tokenId}
               onChange={handleInputChange}
               fullWidth
             />

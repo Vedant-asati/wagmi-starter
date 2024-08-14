@@ -36,7 +36,7 @@ contract CryptoCanvasToken is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
-        emit NFT_Mint(to, _nextTokenId, uri);
+        emit NFT_Mint(to, _nextTokenId-1, uri);
     }
 
     // The following functions are overrides required by Solidity.

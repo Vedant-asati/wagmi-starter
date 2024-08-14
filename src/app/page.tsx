@@ -10,6 +10,7 @@ import { SendTransaction } from "./ui/SendTxn";
 import Header from "./components/Header/index";
 import { SignIn } from "./ui/SignIn";
 import { SignOut } from "./ui/SignOut";
+import Home from "./components/Home/page";
 
 // MUI
 import ImageList from "@mui/material/ImageList";
@@ -30,6 +31,7 @@ function App() {
       <SignIn />
       <br />
       <SignOut />
+      <Home/>
       <Link href="/">Home</Link>
       <Link href="/create-nft">Create NFT</Link>
       <Link href="/nft/5">NFT item 5</Link>

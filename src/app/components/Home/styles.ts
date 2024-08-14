@@ -1,6 +1,4 @@
-import { makeStyles } from '@material-ui/core/styles';
-
-const useStyles = makeStyles({
+export const classes = {
   homepage: {
 
   },
@@ -8,7 +6,7 @@ const useStyles = makeStyles({
     objectFit: "cover",
     width: "100%",
     height: "100%",
-    
+
   },
   banner: {
     // minHeight: "50vh",
@@ -52,6 +50,4 @@ const useStyles = makeStyles({
     fontWeight: "600",
     marginBottom: "1rem",
   }
-});
-
-export { useStyles };
+};

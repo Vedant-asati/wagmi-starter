@@ -747,4 +747,4 @@ export const abi_nft = [
 	}
 ] as const;
 
-export const address_nft = "0x8f0964Bd6a099528cD114efd866Beb8CF1b7E9d0" as const;
+export const address_nft = "0xC434370365E44dd5572E70C244119B3D65Bce07C" as const;

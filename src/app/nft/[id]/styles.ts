@@ -1,7 +1,7 @@
 import { pink } from "@mui/material/colors";
 import { color } from "@mui/system";
 
-const classes = {
+export const classes = {
   pageItem: {
     width: "100%",
     maxWidth: "1100px",
@@ -59,6 +59,4 @@ const classes = {
   pageHeader: {
     // color: "pink"
   }
-};
-
-export { classes };
+} as const;
