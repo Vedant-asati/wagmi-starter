@@ -7,4 +7,8 @@ export function dateToSeconds(dateString: string): number {
     const date = new Date(dateString);
     return Math.floor(date.getTime() / 1000);
   }
+  // TODO: Handle galadriel interacion with ethers using set envs
+export function handleGenerateImage(prompt: string) {
+    console.log(prompt);
+  }
   

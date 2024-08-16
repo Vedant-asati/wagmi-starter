@@ -257,7 +257,9 @@ contract NFTMarketplace is ERC721Holder, Ownable {
 
         emit ListingCancelled(NFTContract, tokenId);
     }
-
+    /// @notice Finds the index of listing in listings array
+    /// @param NFTContract The address of the NFT contract
+    /// @param tokenId The ID of the token listing to be found
     function findListingIndex(address NFTContract, uint256 tokenId)
         public
         view
@@ -275,6 +277,7 @@ contract NFTMarketplace is ERC721Holder, Ownable {
         return 1e9;
     }
 
+    /// @notice Finds the length of listings array
     function getListingsLength()
         public
         view

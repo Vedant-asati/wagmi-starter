@@ -523,4 +523,4 @@ export const abi_marketplace = [
 	}
 ];
 
-export const address_marketplace = "0x4e0b5be8C7b10E8D57b1e43674f46417BB67BfE7"
+export const address_marketplace = "0xD461139772998F2Bfbefc4D7851185A252657304"

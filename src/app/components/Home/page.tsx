@@ -17,8 +17,8 @@ import {
 import {
   abi_marketplace,
   address_marketplace,
-} from "@/app/contract_data/NFT_Marketplace";
-import { type Listing } from "@/app/types/Listing";
+} from "@/contract_data/NFT_Marketplace";
+import { type Listing } from "@/types/Listing";
 
 export default function Home() {
   const [nftListings, setNftListings] = useState<Listing[]>([]);

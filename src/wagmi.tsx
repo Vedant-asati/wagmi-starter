@@ -25,6 +25,12 @@ export const config = defaultWagmiConfig({
   storage: createStorage({
     storage: cookieStorage,
   }),
+  auth: {
+    email: true, // default to true
+    socials: ['google', 'x', 'github', 'discord', 'apple', 'facebook', 'farcaster'],
+    showWallets: true, // default to true
+    walletFeatures: true // default to true
+  },
   transports: {
     [mainnet.id]: http("https://eth-mainnet.g.alchemy.com/v2/4RaQF5Uf-eXwN-BDD3Vua45lPpDOVDQK"),
     [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/4RaQF5Uf-eXwN-BDD3Vua45lPpDOVDQK"),

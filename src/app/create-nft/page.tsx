@@ -8,6 +8,7 @@ import {
   type BaseError,
   useAccount,
   useReadContract,
+  useSignMessage,
   useWaitForTransactionReceipt,
   useWatchContractEvent,
   useWriteContract,
@@ -26,13 +27,14 @@ import { classes } from "./styles.js";
 // Internal
 import DropZone from "../components/DropZone/index";
 // import { api } from "../../services/api";
-import { abi_nft, address_nft } from "@/app/contract_data/CryptoCanvasToken";
+import { abi_nft, address_nft } from "@/contract_data/CryptoCanvasToken";
 import {
   abi_marketplace,
   address_marketplace,
-} from "@/app/contract_data/NFT_Marketplace";
+} from "@/contract_data/NFT_Marketplace";
 import ReadContract from "./ReadContract";
-import { dateToSeconds } from "@/app/utils";
+import { dateToSeconds } from "@/utils/utils";
+import { handleGenerateImage } from "@/utils/utils";
 
 const CreateNFT = () => {
   // const history = useHistory();
@@ -53,8 +55,9 @@ const CreateNFT = () => {
     auction_window: "",
     price: "",
   });
+  const [prompt, setPrompt] = useState("");
 
-  const { address } = useAccount();
+  const { address, chain, chainId } = useAccount();
   const {
     data: hash,
     error,
@@ -303,6 +306,26 @@ const CreateNFT = () => {
         <div style={classes.content}>
           <div style={classes.dropzone}>
             <DropZone onFileUploaded={setSelectedFile} />
+            <div style={classes.dropzone}>
+              <TextField
+                label="Generate with AI"
+                name="prompt"
+                variant="filled"
+                placeholder="Write a prompt to generate NFT"
+                value={prompt}
+                onChange={handleInputChange}
+                fullWidth
+                style={{ marginTop: "10px", marginBottom: "5px" }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={chainId == 696969}
+                onClick={()=>handleGenerateImage(prompt)}
+              >
+                Generate with AI
+              </Button>
+            </div>
           </div>
           <fieldset>
             <TextField

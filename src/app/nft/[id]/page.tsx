@@ -12,9 +12,9 @@ import { Grid, Button, TextField, Typography } from "@mui/material";
 import {
   abi_marketplace,
   address_marketplace,
-} from "@/app/contract_data/NFT_Marketplace";
-import { abi_nft, address_nft } from "@/app/contract_data/CryptoCanvasToken";
-import { type Listing } from "@/app/types/Listing";
+} from "@/contract_data/NFT_Marketplace";
+import { abi_nft, address_nft } from "@/contract_data/CryptoCanvasToken";
+import { type Listing } from "@/types/Listing";
 import { classes } from "./styles";
 
 export default function Page({ params }: { params: { id: string } }) {

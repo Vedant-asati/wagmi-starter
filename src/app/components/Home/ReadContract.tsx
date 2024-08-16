@@ -1,6 +1,6 @@
 import { type BaseError, useReadContracts } from "wagmi";
 
-import { abi_nft, address_nft } from "@/app/contract_data/CryptoCanvasToken";
+import { abi_nft, address_nft } from "@/contract_data/CryptoCanvasToken";
 
 export default function ReadContract() {
   const wagmiContractConfig = {
