@@ -5,6 +5,10 @@ const classes = {
   logo: {
     width: "10rem"
   },
+  link: {
+    margin: "0px",
+    padding: "0px"
+  },
   account: {
     marginLeft: "auto",
     display: "flex",

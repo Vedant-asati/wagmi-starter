@@ -1,51 +1,41 @@
 "use client";
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-// import { useSelector } from "react-redux";
-// import { Link, useHistory } from "react-router-dom";
 import Link from "next/link";
-import { PinataSDK } from "pinata";
 import {
   type BaseError,
   useAccount,
   useReadContract,
-  useSignMessage,
-  useWaitForTransactionReceipt,
   useWatchContractEvent,
   useWriteContract,
+  useWaitForTransactionReceipt,
 } from "wagmi";
 import { parseUnits } from "viem";
+import toast, { Toaster } from "react-hot-toast";
+import { PinataSDK } from "pinata";
 
 // MUI
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-// import { DatePicker } from "@nextui-org/react";
-
-import { classes } from "./styles.js";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
 
 // Internal
 import DropZone from "../components/DropZone/index";
-// import { api } from "../../services/api";
 import { abi_nft, address_nft } from "@/contract_data/CryptoCanvasToken";
 import {
   abi_marketplace,
   address_marketplace,
 } from "@/contract_data/NFT_Marketplace";
-import ReadContract from "./ReadContract";
-import { dateToSeconds } from "@/utils/utils";
-import { handleGenerateImage } from "@/utils/utils";
+import { dateToSeconds, generateImage, urlToFile } from "@/utils/utils";
+import Header from "../components/Header/index";
 
 const CreateNFT = () => {
-  // const history = useHistory();
-
-  // const account = useSelector((state) => state.allNft.account);
-  // const artTokenContract = useSelector(
-  //   (state) => state.allNft.artTokenContract
-  // );
-
   const [_tokenId, setTokenId] = useState<number>(-1);
-  const [URI, setURI] = useState("");
+  const [URI, setURI] = useState<string>("");
   const [isApproved, setIsApproved] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -55,31 +45,20 @@ const CreateNFT = () => {
     auction_window: "",
     price: "",
   });
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState<string | null>(null);
+  const [aiImageUrl, setAiImageUrl] = useState<string | null>(null);
 
-  const { address, chain, chainId } = useAccount();
-  const {
-    data: hash,
-    error,
-    isPending,
-    writeContract,
-    writeContractAsync,
-  } = useWriteContract();
+  const { address, chainId } = useAccount();
+  const { data: hash, writeContractAsync } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
+    useWaitForTransactionReceipt({ hash });
 
-  // TODO Fix
-  // Read
-  const { data: url, isFetched } = useReadContract({
+  const { data: url } = useReadContract({
     address: address_nft,
     abi: abi_nft,
     functionName: "tokenURI",
     args: [BigInt(_tokenId)],
   });
-
-  // Event Logs
 
   useWatchContractEvent({
     address: address_nft,
@@ -97,6 +76,7 @@ const CreateNFT = () => {
       console.log("JSR! Error from NFT_Mint log: ", error);
     },
   });
+
   useWatchContractEvent({
     address: address_marketplace,
     abi: abi_marketplace,
@@ -114,10 +94,9 @@ const CreateNFT = () => {
   });
 
   const pinata = new PinataSDK({
-    pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT
-      ? process.env.NEXT_PUBLIC_PINATA_JWT
-      : "",
-    pinataGateway: "turquoise-voluntary-cricket-828.mypinata.cloud",
+    pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT || "",
+    pinataGateway:
+      process.env.NEXT_PUBLIC_PINATA_NEXT_PUBLIC_PINATA_GATEWAY || "",
   });
 
   useEffect(() => {
@@ -127,22 +106,18 @@ const CreateNFT = () => {
     }
   }, [url]);
 
-  // 1 TODO: Fix calling twice
   useEffect(() => {
     if (isConfirmed && _tokenId !== -1 && !isApproved) {
       (async () => {
-        // Safely list NFT on Marketplace
         await approveMarketplace(_tokenId);
         setIsApproved(true);
       })();
     }
   }, [isConfirmed, _tokenId]);
 
-  // 2
   useEffect(() => {
     if (isConfirmed && _tokenId !== -1 && isApproved) {
       (async () => {
-        // Safely list NFT on Marketplace
         await listNFT(_tokenId, URI);
         setTokenId(-1);
         setIsApproved(false);
@@ -151,12 +126,24 @@ const CreateNFT = () => {
     }
   }, [isConfirmed, _tokenId, isApproved]);
 
-  function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
+  const handleInputChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  async function uploadImageToPinata() {
+  const handleGenerateImage = async () => {
+    try {
+      const url = await generateImage(prompt);
+      setAiImageUrl(url);
+      setSelectedFile(await urlToFile(url));
+    } catch (error) {
+      console.error("Error generating image:", error);
+    }
+  };
+
+  const uploadImageToPinata = async () => {
     if (selectedFile) {
       try {
         const file = new File([selectedFile], selectedFile.name, {
@@ -165,24 +152,19 @@ const CreateNFT = () => {
 
         console.log("JSR! Uploading image...");
         const res = await pinata.upload.file(file);
-        console.log("Pinata res: ", res);
-
         const ImgURL = `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`;
-        console.log("ImgURL", ImgURL);
 
         setURI(res.IpfsHash);
-
         return res.IpfsHash;
       } catch (error) {
-        console.log("JSR! Error uploading image to IPFS");
-        console.log(error);
+        console.error("Error uploading image to IPFS:", error);
       }
     } else {
-      console.log("JSR! Please select a file to upload");
+      console.log("Please select a file to upload");
     }
-  }
+  };
 
-  async function safeMint(receiver: `0x${string}`, PinataCID: string) {
+  const safeMint = async (receiver: `0x${string}`, PinataCID: string) => {
     try {
       await writeContractAsync({
         address: address_nft,
@@ -192,11 +174,11 @@ const CreateNFT = () => {
       });
       console.log("JSR NFT Minted");
     } catch (error) {
-      console.log(error);
+      console.error("Error minting NFT:", error);
     }
-  }
+  };
 
-  async function approveMarketplace(tokenId: number) {
+  const approveMarketplace = async (tokenId: number) => {
     try {
       await writeContractAsync({
         address: address_nft,
@@ -206,23 +188,13 @@ const CreateNFT = () => {
       });
       console.log("JSR NFT Approved");
     } catch (error) {
-      console.log(error);
+      console.error("Error approving marketplace:", error);
     }
-  }
+  };
 
-  async function listNFT(tokenId: number, URI: string) {
+  const listNFT = async (tokenId: number, URI: string) => {
     const { title, description, price, arbiter, auction_window } = formData;
     const auctionWindowInSeconds = dateToSeconds(auction_window);
-    console.log("Marketplace: ", address_marketplace);
-    console.log(
-      " Marketplace Params: ",
-      address_nft,
-      tokenId,
-      price,
-      arbiter,
-      auctionWindowInSeconds,
-      URI
-    );
 
     try {
       await writeContractAsync({
@@ -241,21 +213,17 @@ const CreateNFT = () => {
       console.log("Yay! NFT Listed Successfully 🎉🎉");
       console.log("Txn hash: ", hash);
     } catch (error) {
-      console.log(error);
+      console.error("Error listing NFT:", error);
     }
-  }
+  };
 
-  async function handleCreateNFT(event: FormEvent) {
+  const handleCreateNFT = async (event: FormEvent) => {
     event.preventDefault();
 
-    // Upload Image to Pinata
     const PinataCID = await uploadImageToPinata();
-    console.log("User Address: ", address);
-    console.log("PinataCID: ", PinataCID);
     if (!address || !PinataCID)
-      return console.error("JSR Address or PinataCID is undefined.");
+      return console.error("Address or PinataCID is undefined.");
 
-    // Safely mint NFT
     await safeMint(address, PinataCID);
     // Now event will be triggered which will trigger listNFT function
 
@@ -264,7 +232,8 @@ const CreateNFT = () => {
 
     // Create json data to upload to IPFS
     // await uploadJsonToIPFS(PinataCID);
-  }
+  };
+
   // const uploadJsonToIPFS = async (PinataCID: string) => {
   //   const { title, description } = formData;
 
@@ -295,113 +264,161 @@ const CreateNFT = () => {
   // };
 
   return (
-    <div style={classes.pageCreateNft}>
-      <form onSubmit={handleCreateNFT}>
-        <div style={classes.formHeader}>
-          <h1>Create collectible</h1>
-          <Link href="/">
-            <CancelOutlinedIcon fontSize="large" />
-          </Link>
-        </div>
-        <div style={classes.content}>
-          <div style={classes.dropzone}>
-            <DropZone onFileUploaded={setSelectedFile} />
-            <div style={classes.dropzone}>
-              <TextField
-                label="Generate with AI"
-                name="prompt"
-                variant="filled"
-                placeholder="Write a prompt to generate NFT"
-                value={prompt}
-                onChange={handleInputChange}
-                fullWidth
-                style={{ marginTop: "10px", marginBottom: "5px" }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                disabled={chainId == 696969}
-                onClick={()=>handleGenerateImage(prompt)}
+    <>
+      <Header />
+      <Box sx={{ py: 4 }}>
+        <Toaster />
+        <Paper sx={{ p: 4, mx: "auto", maxWidth: 800 }}>
+          <form onSubmit={handleCreateNFT}>
+            <Box sx={{ mb: 4, position: "relative" }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                align="center"
+                gutterBottom
               >
-                Generate with AI
-              </Button>
-            </div>
-          </div>
-          <fieldset>
-            <TextField
-              label="Title"
-              name="title"
-              variant="filled"
-              required
-              value={formData.title}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Description"
-              name="description"
-              variant="filled"
-              required
-              value={formData.description}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="Arbiter"
-              name="arbiter"
-              variant="filled"
-              required
-              value={formData.arbiter}
-              onChange={handleInputChange}
-              fullWidth
-            />
-            <TextField
-              label="price"
-              name="price"
-              variant="filled"
-              value={formData.price}
-              onChange={handleInputChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">ETH</InputAdornment>
-                ),
-              }}
-              fullWidth
-            />
-            <label htmlFor="auction_window">Auction End:</label>
-            <input
-              type="date"
-              id="auction_window"
-              name="auction_window"
-              onChange={handleInputChange}
-              value={formData.auction_window}
-            />
-            <br />
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              disabled={isPending || isConfirming}
-            >
-              {isPending || isConfirming ? "Confirming..." : "Create"}
-            </Button>
-          </fieldset>
-        </div>
-      </form>
-      {/* <form onSubmit={safeMint}>
-        <input name="token-receiver" placeholder="0xA0Cf...251e" required />
-        <input name="pinata-cid" placeholder="QmXs...i1g" required />
-        <button disabled={isPending} type="submit">
-          {isPending ? "Confirming..." : "Mint"}
-        </button>
-        {hash && <div>Transaction Hash: {hash}</div>}
-        {isConfirming && <div>Waiting for confirmation...</div>}
-        {isConfirmed && <div>Transaction confirmed.</div>}
-        {error && (
-          <div>Error: {(error as BaseError).shortMessage || error.message}</div>
-        )}
-      </form> */}
-    </div>
+                Create Collectible Art
+              </Typography>
+              <Link href="/" style={{ position: "absolute", top: 0, right: 0 }}>
+                <CancelOutlinedIcon fontSize="large" />
+              </Link>
+            </Box>
+
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <DropZone
+                  onFileUploaded={setSelectedFile}
+                  initialPreview={aiImageUrl}
+                />
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                md={6}
+                container
+                spacing={2}
+                sx={{
+                  justifyContent: "center", // Centers horizontally
+                  alignItems: "center", // Centers vertically (if needed)
+                }}
+              >
+                <Grid item xs={12}>
+                  <TextField
+                    label="Generate with AI"
+                    name="prompt"
+                    variant="outlined"
+                    placeholder="generate a cool, antique nft image"
+                    value={prompt || ""}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    fullWidth
+                    sx={{ mb: 1 }}
+                  />
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    disabled={!prompt}
+                    onClick={() => {
+                      toast.promise(
+                        handleGenerateImage(),
+                        {
+                          loading: "Generating AI Image...",
+                          success: "Successfully Generated.",
+                          error: (err) =>
+                            `Oops! This just happened: ${err.toString()}`,
+                        },
+                        {
+                          style: { minWidth: "250px" },
+                          success: { duration: 5000, icon: "🔥" },
+                        }
+                      );
+                    }}
+                  >
+                    Generate
+                  </Button>
+                </Grid>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Title"
+                  name="title"
+                  variant="outlined"
+                  required
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Description"
+                  name="description"
+                  variant="outlined"
+                  required
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Auction End Date"
+                  name="auction_window"
+                  variant="outlined"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  required
+                  value={formData.auction_window}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Price (ETH)"
+                  name="price"
+                  variant="outlined"
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">ETH</InputAdornment>
+                    ),
+                  }}
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Arbiter Address"
+                  name="arbiter"
+                  variant="outlined"
+                  placeholder="0x"
+                  required
+                  value={formData.arbiter}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  disabled={!address || !selectedFile}
+                >
+                  {isConfirming
+                    ? "Confirming..."
+                    : isConfirmed
+                      ? "Success"
+                      : "Create"}
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+      </Box>
+    </>
   );
 };
 

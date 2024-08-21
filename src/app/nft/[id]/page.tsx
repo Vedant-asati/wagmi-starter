@@ -1,12 +1,18 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import InputEvent from "react";
-import Link from "next/link";
+
+import React, { useState, useEffect, ChangeEvent } from "react";
 import { useReadContract, useWriteContract, useAccount } from "wagmi";
 import { parseUnits, formatEther } from "viem";
 
 // MUI
-import { Grid, Button, TextField, Typography } from "@mui/material";
+import {
+  Grid,
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Box,
+} from "@mui/material";
 
 // Internal
 import {
@@ -14,15 +20,14 @@ import {
   address_marketplace,
 } from "@/contract_data/NFT_Marketplace";
 import { abi_nft, address_nft } from "@/contract_data/CryptoCanvasToken";
-import { type Listing } from "@/types/Listing";
-import { classes } from "./styles";
+import { Listing } from "@/types/Listing";
+import Header from "@/app/components/Header";
 
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;
   const { address } = useAccount();
 
   const [nftData, setNftData] = useState<Listing | null>(null);
-
   const [isOwner, setIsOwner] = useState(false);
   const [isArbiter, setIsArbiter] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
@@ -30,30 +35,19 @@ export default function Page({ params }: { params: { id: string } }) {
   const [status, setStatus] = useState("");
   const [listingDate, setListingDate] = useState("");
   const [auctionEnd, setAuctionEnd] = useState("");
-  const [price, setPrice] = useState<string | null>(null);
+  const [price, setPrice] = useState<string>("");
 
-  // Read
-  const {
-    data: nft,
-    isLoading: isLoadingNFT,
-    isFetched,
-  } = useReadContract({
+  // Read Contract
+  const { data: nft } = useReadContract({
     address: address_marketplace,
     abi: abi_marketplace,
     functionName: "address_TokenId_ListingMap",
     args: [address_nft, BigInt(id)],
   });
 
-  // Write
-  const {
-    data: hash,
-    error,
-    isPending,
-    writeContract,
-    writeContractAsync,
-  } = useWriteContract();
+  // Write Contract
+  const { writeContractAsync } = useWriteContract();
 
-  // 1
   useEffect(() => {
     if (!nft) return;
 
@@ -71,56 +65,57 @@ export default function Page({ params }: { params: { id: string } }) {
     });
   }, [nft]);
 
-  // 2
   useEffect(() => {
     if (!nftData) return;
 
-    setIsExpired(
-      Math.floor(Date.now() / 1000) > (nftData?.auctionWindow || 1e12)
-    );
+    const now = Math.floor(Date.now() / 1000);
+    setIsExpired(now > (nftData?.auctionWindow || 1e12));
     setStatus(
       nftData?.sold
         ? "Sold"
-        : Math.floor(Date.now() / 1000) > (nftData?.auctionWindow || 1e12)
+        : now > (nftData?.auctionWindow || 1e12)
           ? "Expired"
           : "On Sale"
     );
+
     if (nftData?.listingTime) {
-      const formattedDate = new Intl.DateTimeFormat("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        timeZoneName: "shortOffset",
-      }).format(new Date(Number(nftData?.listingTime) * 1000));
-      setListingDate(formattedDate.toLocaleUpperCase());
+      setListingDate(
+        new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+          timeZoneName: "shortOffset",
+        }).format(new Date(Number(nftData?.listingTime) * 1000))
+      );
     }
+
     if (nftData?.auctionWindow) {
-      const formattedDate = new Intl.DateTimeFormat("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        timeZoneName: "shortOffset",
-      }).format(new Date(Number(nftData?.auctionWindow) * 1000));
-      setAuctionEnd(formattedDate.toLocaleUpperCase());
+      setAuctionEnd(
+        new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+          timeZoneName: "shortOffset",
+        }).format(new Date(Number(nftData?.auctionWindow) * 1000))
+      );
     }
   }, [nftData]);
 
-  // 3
   useEffect(() => {
     if (address) {
       setIsOwner(
         nftData?.seller?.toLowerCase() === address?.toLowerCase() &&
-          address != "0x0"
+          address !== "0x0"
       );
       setIsArbiter(
         nftData?.arbiter?.toLowerCase() === address?.toLowerCase() &&
-          address != "0x0"
+          address !== "0x0"
       );
     }
   }, [address, nftData]);
@@ -135,9 +130,9 @@ export default function Page({ params }: { params: { id: string } }) {
         args: [address_nft, id],
         value: parseUnits(price, 18),
       });
-      console.log("JSR! NFT Bought Successfully.");
+      console.log("NFT Bought Successfully.");
     } catch (error) {
-      console.log("JSR! Error with buying NFT: ", error);
+      console.log("Error buying NFT: ", error);
     }
   };
 
@@ -151,163 +146,121 @@ export default function Page({ params }: { params: { id: string } }) {
         args: [address_nft, id],
         value: parseUnits(price, 18),
       });
-      console.log("JSR! NFT cancelled Successfully.");
+      console.log("NFT cancelled successfully.");
     } catch (error) {
-      console.log("JSR! Error with cancelling NFT: ", error);
+      console.log("Error cancelling NFT: ", error);
     }
   };
 
-  // TODO Fix type
-  const handleChange = (e) => {
-    setPrice(e.target.value);
+  const handlePriceChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    setPrice(inputValue);
   };
 
-  if (isLoadingNFT || !nftData) return <div>Loading...</div>;
-
   return (
-    <>
-      <Link href="/">
-        {/* <a style={{ textDecoration: "none", marginBottom: "16px" }}> */}← Go
-        to Homepage
-        {/* </a> */}
-      </Link>
-      {/* "is Fetched: "{isFetched ? "true" : "false"}
-      <br />
-      "is Arbiter: "{isArbiter ? "true" : "false"}
-      <br />
-      "is Owner: "{isOwner ? "true" : "false"}
-      <br />
-      "is Expired: "{isExpired ? "true" : "false"}
-      <br />
-      "is Sold: "{nftData?.sold ? "true" : "false"} */}
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Header />
+      {nftData ? (
+        <>
+          <Typography variant="h4" gutterBottom>{`NFT ${id}`}</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1">
+                  <strong>Price:</strong> {formatEther(nftData.price)} ETH
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Seller:</strong>{" "}
+                  {`${nftData.seller.slice(0, 6)}...${nftData.seller.slice(-4)}`}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Buyer:</strong>{" "}
+                  {nftData.buyer
+                    ? `${nftData.buyer.slice(0, 6)}...${nftData.buyer.slice(-4)}`
+                    : "None"}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Status:</strong> {status}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Listing Date:</strong> {listingDate.toUpperCase()}
+                </Typography>
+                <Typography variant="body1">
+                  <strong>Auction End:</strong> {auctionEnd.toUpperCase()}
+                </Typography>
+              </Box>
 
-      <Grid container spacing={3} sx={{ padding: 3 }}>
-        <Grid item xs={12} sm={6}>
-          <img
-            src={`/api/pinata/${nftData?.uri}`}
-            alt={nftData?.tokenId?.toString()}
-            style={{ width: "100%", borderRadius: "8px" }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="h4">#{nftData?.tokenId}</Typography>
-          <TextField
-            label="Owner"
-            value={`${nftData?.seller?.slice(0, 6)}...${nftData?.seller?.slice(-4)}`}
-            fullWidth
-            margin="normal"
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            label="Description"
-            value={nftData?.tokenId}
-            fullWidth
-            margin="normal"
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            label="Price"
-            value={`${formatEther(nftData?.price)} ETH`}
-            fullWidth
-            margin="normal"
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            label="Status"
-            value={status}
-            fullWidth
-            margin="normal"
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            label="Listing Time"
-            value={listingDate}
-            fullWidth
-            margin="normal"
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            label="Auction End"
-            value={auctionEnd}
-            fullWidth
-            margin="normal"
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          {!nftData?.sold && !isOwner && !isArbiter && !isExpired && (
-            <TextField
-              label="Bid Price"
-              value={price}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-            />
-          )}
-          {isArbiter && !isExpired && (
-            <TextField
-              label="Refund to Buyer"
-              value={price}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-            />
-          )}
-          {isOwner && (
-            <>
-              <TextField
-                label="Arbiter"
-                value={nftData?.arbiter}
-                fullWidth
-                margin="normal"
-                InputProps={{
-                  readOnly: true,
-                }}
+              {isOwner && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body1">
+                    <strong>Arbiter:</strong>{" "}
+                    {`${nftData.arbiter.slice(0, 6)}...${nftData.arbiter.slice(-4)}`}
+                    <Box component="span" sx={{ fontStyle: "italic", ml: 1 }}>
+                      Owned by you
+                    </Box>
+                  </Typography>
+                </Box>
+              )}
+
+              {(isArbiter || isOwner) && (
+                <Box sx={{ mb: 2 }}>
+                  <TextField
+                    label="Refund to Buyer"
+                    value={price}
+                    onChange={handlePriceChange}
+                    fullWidth
+                    margin="normal"
+                  />
+                  <Button
+                    variant="contained"
+                    color="error"
+                    fullWidth
+                    onClick={cancelListing}
+                    disabled={isExpired}
+                    sx={{ mt: 2 }}
+                  >
+                    Cancel Listing
+                  </Button>
+                </Box>
+              )}
+
+              {!isOwner && !isArbiter && (
+                <Box sx={{ mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Enter Price (ETH)"
+                    value={price}
+                    onChange={handlePriceChange}
+                    type="number"
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                  />
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={buyNFT}
+                    disabled={isExpired || nftData?.sold}
+                  >
+                    Buy NFT
+                  </Button>
+                </Box>
+              )}
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <img
+                src={`/api/pinata/${nftData?.uri}`}
+                alt={`NFT ${id}`}
+                style={{ width: "100%", borderRadius: "8px" }}
               />
-              <TextField
-                value="Owned by you"
-                fullWidth
-                margin="normal"
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-            </>
-          )}
-
-          {isArbiter && !isExpired && (
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => cancelListing()}
-            >
-              Cancel Listing
-            </Button>
-          )}
-
-          {!isOwner && !isArbiter && !nftData?.sold && !isExpired && (
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => buyNFT()}
-            >
-              Buy NFT
-            </Button>
-          )}
-        </Grid>
-      </Grid>
-    </>
+            </Grid>
+          </Grid>
+        </>
+      ) : (
+        <Typography variant="h5" gutterBottom>
+          Loading NFT data...
+        </Typography>
+      )}
+    </Container>
   );
 }

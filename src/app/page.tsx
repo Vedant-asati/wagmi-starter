@@ -1,158 +1,60 @@
 "use client";
 
-// import { BrowserRouter, Switch, Route } from "react-router-dom";
 import Link from "next/link";
-import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
+import { useAccount } from "wagmi";
+import { useState } from "react";
 
-import { SendTransaction } from "./ui/SendTxn";
+// MUI
+import { Container, Box, Typography, Button, Grid } from "@mui/material";
+// import Carousel  from 'react-material-ui-carousel';
+import { Paper } from '@mui/material';
 
 // Internal
-import Header from "./components/Header/index";
+import Header from "./components/Header";
 import { SignIn } from "./ui/SignIn";
 import { SignOut } from "./ui/SignOut";
 import Home from "./components/Home/page";
+import { SendTransaction } from "./ui/SendTxn";
+import logo from "@/app/assets/OpenArtLogo.png";
+import Carousel from "./ui/Carousel";
 
-// MUI
-import ImageList from "@mui/material/ImageList";
-import ImageListItem from "@mui/material/ImageListItem";
-import ImageListItemBar from "@mui/material/ImageListItemBar";
-import ListSubheader from "@mui/material/ListSubheader";
-import IconButton from "@mui/material/IconButton";
-import InfoIcon from "@mui/icons-material/Info";
 
 function App() {
   const { isConnected } = useAccount();
+
+  const imgData = [
+    { img: '@/app/assets/images/1.png', title: 'Image 1' },
+    { img: '@/app/assets/images/2.png', title: 'Image 2' },
+    { img: '@/app/assets/images/3.png', title: 'Image 3' },
+    { img: '@/app/assets/images/4.png', title: 'Image 4' },
+    { img: '@/app/assets/images/5.png', title: 'Image 5' },
+    { img: '@/app/assets/images/6.png', title: 'Image 6' },
+    { img: '@/app/assets/images/7.png', title: 'Image 7' },
+    { img: '@/app/assets/images/8.png', title: 'Image 8' },
+    // { img: '@/app/assets/images/9.png', title: 'Image 9' },
+    // { img: '@/app/assets/images/10.png', title: 'Image 10' },
+    // { img: '@/app/assets/images/11.png', title: 'Image 11' },
+    // { img: '@/app/assets/images/12.png', title: 'Image 12' },
+    // { img: '@/app/assets/images/13.png', title: 'Image 13' },
+    // { img: '@/app/assets/images/14.png', title: 'Image 14' },
+  ];
+
   return (
-    <div className="App">
-      Jai Siyaram!
+    <Container maxWidth="lg">
       <Header />
-      {isConnected && <SendTransaction />}
-      {/* <TitlebarImageList /> */}
-      <SignIn />
-      <br />
-      <SignOut />
-      <Home/>
-      <Link href="/">Home</Link>
-      <Link href="/create-nft">Create NFT</Link>
-      <Link href="/nft/5">NFT item 5</Link>
-    </div>
+      <Box sx={{ textAlign: "center", mt: 4 }}>
+        <Typography variant="h4" gutterBottom>Welcome to OpenArt </Typography>
+      </Box>  
+      <Carousel imgData={imgData}/>
+      <Box sx={{ textAlign: "center", pt:1, pb:2 }}>
+      <Link href="/create-nft">
+        <Button variant="outlined">Create your Art</Button>
+      </Link>
+      </Box>
+      <Typography variant="h5">Top Trending Arts</Typography>
+      <Home />
+    </Container>
   );
 }
-
-export function Profile() {
-  const { address } = useAccount();
-  const { data, error, status } = useEnsName({ address });
-  if (status === "pending") return <div>Loading ENS name</div>;
-  if (status === "error")
-    return <div>Error fetching ENS name: {error.message}</div>;
-  // console.log("ENS Data: ",data);
-  return <div>ENS name: {data}</div>;
-}
-
-export function TitlebarImageList() {
-  return (
-    <ImageList sx={{ width: 500, height: 450 }}>
-      <ImageListItem key="Subheader" cols={2}>
-        <ListSubheader component="div">December</ListSubheader>
-      </ImageListItem>
-      {itemData.map((item) => (
-        <ImageListItem key={item.img}>
-          <img
-            srcSet={`${item.img}?w=248&fit=crop&auto=format&dpr=2 2x`}
-            src={`${item.img}?w=248&fit=crop&auto=format`}
-            alt={item.title}
-            loading="lazy"
-          />
-          <ImageListItemBar
-            title={item.title}
-            subtitle={item.author}
-            actionIcon={
-              <IconButton
-                sx={{ color: "rgba(255, 255, 255, 0.54)" }}
-                aria-label={`info about ${item.title}`}
-              >
-                <InfoIcon />
-              </IconButton>
-            }
-          />
-        </ImageListItem>
-      ))}
-    </ImageList>
-  );
-}
-
-const itemData = [
-  {
-    img: "https://images.unsplash.com/photo-1551963831-b3b1ca40c98e",
-    title: "Breakfast",
-    author: "@bkristastucchio",
-    rows: 2,
-    cols: 2,
-    featured: true,
-  },
-  {
-    img: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d",
-    title: "Burger",
-    author: "@rollelflex_graphy726",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1522770179533-24471fcdba45",
-    title: "Camera",
-    author: "@helloimnik",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c",
-    title: "Coffee",
-    author: "@nolanissac",
-    cols: 2,
-  },
-  {
-    img: "https://images.unsplash.com/photo-1533827432537-70133748f5c8",
-    title: "Hats",
-    author: "@hjrc33",
-    cols: 2,
-  },
-  {
-    img: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62",
-    title: "Honey",
-    author: "@arwinneil",
-    rows: 2,
-    cols: 2,
-    featured: true,
-  },
-  {
-    img: "https://images.unsplash.com/photo-1516802273409-68526ee1bdd6",
-    title: "Basketball",
-    author: "@tjdragotta",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1518756131217-31eb79b20e8f",
-    title: "Fern",
-    author: "@katie_wasserman",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1597645587822-e99fa5d45d25",
-    title: "Mushrooms",
-    author: "@silverdalex",
-    rows: 2,
-    cols: 2,
-  },
-  {
-    img: "https://images.unsplash.com/photo-1567306301408-9b74779a11af",
-    title: "Tomato basil",
-    author: "@shelleypauls",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1471357674240-e1a485acb3e1",
-    title: "Sea star",
-    author: "@peterlaster",
-  },
-  {
-    img: "https://images.unsplash.com/photo-1589118949245-7d38baf380d6",
-    title: "Bike",
-    author: "@southside_customs",
-    cols: 2,
-  },
-];
 
 export default App;

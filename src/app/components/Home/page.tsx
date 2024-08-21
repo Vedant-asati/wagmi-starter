@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useReadContract, useReadContracts } from "wagmi";
 import Link from "next/link";
+import { parseUnits, formatEther } from "viem";
+
 
 // MUI
 import {
@@ -23,7 +25,6 @@ import { type Listing } from "@/types/Listing";
 export default function Home() {
   const [nftListings, setNftListings] = useState<Listing[]>([]);
   const [dataArr, setDataArr] = useState([]);
-  const [doIt, setDoIt] = useState(false);
 
   // Read
   const { data: listingsLength, isFetched: lengthFetched } = useReadContract({
@@ -87,8 +88,6 @@ export default function Home() {
 
   return (
     <>
-      JSR HOME
-      <button onClick={() => setDoIt(!doIt)}>DoIt</button>
       <Grid container spacing={3} sx={{ padding: 3 }}>
         {nftListings.map((listing) => {
           const isExpired =
@@ -109,9 +108,9 @@ export default function Home() {
                   alt={`NFT ${listing.tokenId}`}
                 />
                 <CardContent>
-                  <Typography variant="h6">NFT #{listing.tokenId}</Typography>
+                  <Typography variant="h6">NFT #{Number(listing.tokenId)}</Typography>
                   <Typography variant="body2" color="textSecondary">
-                    Price: {listing.price} ETH
+                    Price: {formatEther(listing?.price)} ETH
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     Seller: {listing.seller.slice(0, 6)}...
